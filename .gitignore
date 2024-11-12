@@ -66,3 +66,4 @@ tox_*.log
 # Migrations
 migrations/
 __pycache__/
+data
