@@ -1,6 +1,6 @@
 # 📚 Bluesky Crawler README
 
-Welcome to the **Bluesky Crawler** project! This repository contains tools to interact with the Bluesky API, collecting posts and replies from users, and storing them in a SQLite database. 
+Welcome to the **Bluesky Crawler** project! This repository contains tools to interact with the Bluesky API, collecting posts and replies from users, and storing them in a SQLite database.
 
 ## 🚀 Summary of Project
 

@@ -1,16 +1,16 @@
 from dataclasses import dataclass
-from datetime import datetime
 import logging
-import sys
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 import requests
 from requests.exceptions import RequestException
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
+
 @dataclass
 class BlueskyConfig:
     """Configuration class for Bluesky client settings"""
+
     actor: str
     base_url: str = "https://public.api.bsky.app/xrpc"
     posts_limit: int = 5
@@ -18,20 +18,21 @@ class BlueskyConfig:
     max_retries: int = 3
     backoff_factor: float = 0.3
 
+
 class BlueskyClient:
     """Client for interacting with Bluesky API"""
-    
+
     def __init__(self, config: BlueskyConfig):
         self.config = config
         self.session = self._create_session()
-        
+
     def _create_session(self) -> requests.Session:
         """Create a requests session with retry logic"""
         session = requests.Session()
         retry_strategy = Retry(
             total=self.config.max_retries,
             backoff_factor=self.config.backoff_factor,
-            status_forcelist=[429, 500, 502, 503, 504]
+            status_forcelist=[429, 500, 502, 503, 504],
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         session.mount("https://", adapter)
@@ -44,7 +45,7 @@ class BlueskyClient:
             response = self.session.get(
                 f"{self.config.base_url}/{endpoint}",
                 params=params,
-                timeout=self.config.request_timeout
+                timeout=self.config.request_timeout,
             )
             response.raise_for_status()
             return response.json()
@@ -57,7 +58,7 @@ class BlueskyClient:
         try:
             response = self._make_request(
                 "app.bsky.feed.getAuthorFeed",
-                params={"actor": self.config.actor, "limit": self.config.posts_limit}
+                params={"actor": self.config.actor, "limit": self.config.posts_limit},
             )
             return response.get("feed", [])
         except RequestException:
@@ -68,8 +69,7 @@ class BlueskyClient:
         """Fetch replies for a specific post"""
         try:
             response = self._make_request(
-                "app.bsky.feed.getPostThread",
-                params={"uri": uri}
+                "app.bsky.feed.getPostThread", params={"uri": uri}
             )
             return response.get("thread", {}).get("replies", [])
         except RequestException:
