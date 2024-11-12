@@ -29,31 +29,36 @@ FROM uv AS deps-builder
 COPY scripts/pyproject.toml /_project/
 COPY scripts/uv.lock /_project/
 
-RUN --mount=type=cache,target=/root/.cache <<EOT
-    uv venv
-EOT
-
 WORKDIR /_project
 
-# install deps
+# Create and populate the venv that we'll copy to final image
 RUN --mount=type=cache,target=/root/.cache <<EOT
-    uv sync --locked --no-dev --no-install-project
+    uv venv /app/venv
+    UV_SYSTEM_PYTHON=/app/venv/bin/python \
+    UV_PROJECT_ENVIRONMENT=/app/venv \
+    uv sync
 EOT
 
 FROM uv AS project-builder
-COPY --from=deps-builder /app /app
+COPY --from=deps-builder /app/venv /app/venv
 COPY scripts/ /src/
 WORKDIR /src
 
-# install project
+# Install project into the venv
 RUN --mount=type=cache,target=/root/.cache <<EOT
-    uv sync --locked --no-dev --no-editable
+    UV_SYSTEM_PYTHON=/app/venv/bin/python \
+    UV_PROJECT_ENVIRONMENT=/app/venv \
+    uv sync
 EOT
+
+# Previous stages remain the same...
 
 FROM base AS final
 SHELL ["/bin/bash", "-exo", "pipefail",  "-c"]
-ENV PATH=/app/bin:$PATH \
-    PYTHONPATH=/app
+ENV PATH=/app/venv/bin:$PATH \
+    PYTHONPATH=/app \
+    UV_SYSTEM_PYTHON=/app/venv/bin/python \
+    UV_PROJECT_ENVIRONMENT=/app/venv
 
 RUN <<EOT
     groupadd -r app
@@ -67,6 +72,7 @@ RUN <<EOT
     apt-get install -qyy \
     -o APT::Install-Recommends=false \
     -o APT::Install-Suggests=false \
+    bash \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 EOT
@@ -75,13 +81,16 @@ EOT
 RUN mkdir -p /app/data /app/logs \
     && chown -R app:app /app
 
+# Copy uv from the uv stage
+COPY --from=uv /usr/local/bin/uv /usr/local/bin/uv
 
-# Copy the Python files to /app
+# Copy the venv and all project files
+COPY --from=project-builder --chown=app:app /app/venv /app/venv
 COPY --from=project-builder --chown=app:app /src/*.py /app/
+COPY --from=project-builder --chown=app:app /src/uv.lock /app/
+COPY --from=project-builder --chown=app:app /src/pyproject.toml /app/
 
 USER app
 WORKDIR /app
 
-# Modified entrypoint to run Python scripts
-ENTRYPOINT ["python"]
-CMD ["--help"]
+ENTRYPOINT ["uv", "run"]
