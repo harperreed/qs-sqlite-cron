@@ -12,12 +12,13 @@ load_dotenv()
 
 def setup_logging():
     """Configure logging settings"""
+    LOG_DIR = Path("logs")
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [BLUESKY] %(levelname)s: %(message)s",
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler("bluesky.log")
+            logging.FileHandler(f"{LOG_DIR}/bluesky.log")
         ]
     )
 
