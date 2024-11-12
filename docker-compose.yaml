@@ -10,3 +10,4 @@ services:
       - DATABASE_DIRECTORY=/app/data
       - BLUESKY_ACTOR=${BLUESKY_ACTOR}
       - POSTS_TO_GRAB=${POSTS_TO_GRAB:-5}
+      - LOG_DIRECTORY=${LOG_DIRECTORY:-/app/data}

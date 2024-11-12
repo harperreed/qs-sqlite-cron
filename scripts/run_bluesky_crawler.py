@@ -12,7 +12,7 @@ load_dotenv()
 
 def setup_logging():
     """Configure logging settings"""
-    LOG_DIR = Path("logs")
+    LOG_DIR = Path(os.getenv("LOG_DIRECTORY", "logs"))
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [BLUESKY] %(levelname)s: %(message)s",
