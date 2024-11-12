@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  script-runner:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - DATABASE_DIRECTORY=/app/data
+      - BLUESKY_ACTOR=${BLUESKY_ACTOR}
+      - POSTS_TO_GRAB=${POSTS_TO_GRAB:-5}
